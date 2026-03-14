@@ -1,0 +1,11 @@
+{
+  "appId": "com.cuiniao.mathkids",
+  "appName": "小小数学家",
+  "webDir": ".",
+  "bundledWebRuntime": false,
+  "ios": {
+    "backgroundColor": "#87CEEB",
+    "launchStoryboard": "LaunchScreen",
+    "cordovaVariables": {}
+  }
+}
