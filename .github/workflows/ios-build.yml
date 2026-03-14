@@ -3,45 +3,23 @@ name: Build iOS
 on:
   workflow_dispatch:
   
-permissions:
-  contents: write
-
 jobs:
-  build-ios:
+  build:
     runs-on: macos-latest
-    permissions:
-      contents: write
-    
     steps:
       - uses: actions/checkout@v4
       
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: 18
       
-      - name: Install dependencies
-        run: npm install
+      - run: npm install
       
-      - name: Add iOS platform
-        run: npx cap add ios
+      - run: npx cap add ios
       
-      - name: Sync iOS
-        run: npx cap sync ios
+      - run: npx cap build ios
       
-      - name: Build for iOS Device
-        run: |
-          cd ios/App
-          xcodebuild -scheme App -configuration Debug -destination 'generic/platform=iOS' -arch arm64 build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
-      
-      - name: Create IPA
-        run: |
-          cd ios/App
-          xcodebuild -exportArchive -archivePath build/App.xcarchive -exportPath ./output -exportOptionsPlist ExportOptions.plist CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
-        continue-on-error: true
-      
-      - name: Upload IPA
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: app.ipa
-          path: ios/App/output/app.ipa
+          name: app
+          path: ios/App/build/App.ipa
