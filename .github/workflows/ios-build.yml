@@ -1,0 +1,45 @@
+name: Build iOS
+
+on:
+  workflow_dispatch:
+    
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Install dependencies
+        run: |
+          npm install
+          npm install @capacitor/cli @capacitor/core @capacitor/ios
+      
+      - name: Sync iOS
+        run: npx cap sync ios
+      
+      - name: Build iOS
+        run: |
+          cd ios/App
+          xcodebuild -scheme App -configuration Debug -destination 'generic/platform=iOS Simulator' build
+        env:
+          CODE_SIGNING_ALLOWED: NO
+      
+      - name: Create IPA
+        run: |
+          cd ios/App
+          xcodebuild -scheme App -configuration Debug -destination 'generic/platform=iOS Simulator' -archivePath app.xcarchive archive
+          xcodebuild -exportArchive -archivePath app.xcarchive -exportPath ./output -exportOptionsPlist ExportOptions.plist
+        env:
+          CODE_SIGNING_ALLOWED: NO
+      
+      - name: Upload IPA
+        uses: actions/upload-artifact@v3
+        with:
+          name: app.ipa
+          path: ios/App/output/app.ipa
