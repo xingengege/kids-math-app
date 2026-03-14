@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   build-ios:
-    runs-on: macos-14
+    runs-on: macos-latest
     permissions:
       contents: write
     
@@ -32,14 +32,14 @@ jobs:
       - name: Build iOS
         run: |
           cd ios/App
-          xcodebuild -scheme App -configuration Debug -destination 'generic/platform=iOS Simulator' build
+          xcodebuild -scheme App -configuration Debug -destination 'generic/platform=iOS Simulator' -arch arm64 build
         env:
           CODE_SIGNING_ALLOWED: NO
       
       - name: Create IPA
         run: |
           cd ios/App
-          xcodebuild -scheme App -configuration Debug -destination 'generic/platform=iOS Simulator' -archivePath app.xcarchive archive
+          xcodebuild -scheme App -configuration Debug -destination 'generic/platform=iOS Simulator' -arch arm64 -archivePath app.xcarchive archive
           xcodebuild -exportArchive -archivePath app.xcarchive -exportPath ./output -exportOptionsPlist ExportOptions.plist
         env:
           CODE_SIGNING_ALLOWED: NO
