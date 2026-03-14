@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>小小数学家</title>
+    <meta name="theme-color" content="#87CEEB">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="小小数学家">
+    <link rel="apple-touch-icon" href="icons/icon-180.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="icons/icon-167.png">
+    <link rel="manifest" href="manifest.json">
+    <style>
+        * {margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'微软雅黑',sans-serif;background:linear-gradient(135deg,#87CEEB,#98FB98,#FFD700);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;touch-action:manipulation}
+        .container{text-align:center;padding:20px;width:100%;max-width:600px}
+        .title{font-size:3rem;color:#FF6B6B;text-shadow:2px 2px 0 #fff;margin-bottom:20px}
+        .question-box{background:rgba(255,255,255,0.9);border-radius:30px;padding:40px;margin:20px 0;box-shadow:0 10px 30px rgba(0,0,0,0.2)}
+        .question{font-size:4rem;color:#4A4A4A;margin:20px 0;font-weight:bold}
+        .options{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin-top:30px}
+        .btn{width:120px;height:120px;border:none;border-radius:25px;font-size:3rem;font-weight:bold;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+        .btn:active{transform:scale(0.95)}
+        .btn-green{background:#90EE90;color:#006400}
+        .btn-orange{background:#FFB6C1;color:#8B0000}
+        .btn-blue{background:#87CEFA;color:#00008B}
+        .btn-yellow{background:#FFE4B5;color:#8B4513}
+        .score{font-size:1.5rem;color:#fff;text-shadow:2px 2px 0 #000;margin-top:20px}
+        .btn-test{background:#6B5B95;border:none;padding:15px 30px;font-size:1.2rem;border-radius:20px;color:white;margin:10px;cursor:pointer}
+        .btn-start{background:linear-gradient(45deg,#FF6B6B,#FFD93D);border:none;padding:30px 60px;font-size:2.5rem;border-radius:50px;color:white;cursor:pointer;margin-top:30px}
+        .hidden{display:none!important}
+        .feedback{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:5rem;animation:pop 0.5s}
+        @keyframes pop{0%{transform:translate(-50%,-50%)scale(0)}50%{transform:translate(-50%,-50%)scale(1.2)}100%{transform:translate(-50%,-50%)scale(1)}}
+    </style>
+</head>
+<body>
+    <div id="startScreen">
+        <div style="font-size:6rem">🦜</div>
+        <h1 style="font-size:3rem;color:#FF6B6B;text-shadow:2px 2px 0 #fff;margin-bottom:20px">小小数学家</h1>
+        <p style="font-size:1.5rem;color:#fff;text-shadow:2px 2px 0 #000">和翠鸟一起学数学吧！</p>
+        <button class="btn-start" onclick="startGame()">开始玩 ▶</button>
+        <br>
+        <button class="btn-test" onclick="testTTS()">🔊 测试语音</button>
+    </div>
+    
+    <div id="gameScreen" class="hidden">
+        <div style="background:rgba(255,255,255,0.9);border-radius:30px;padding:40px;margin:20px 0">
+            <div id="question" style="font-size:4rem;color:#4A4A4A;margin:20px 0;font-weight:bold">1 + 1 = ?</div>
+            <div id="options" style="display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin-top:30px"></div>
+        </div>
+        <div style="font-size:1.5rem;color:#fff;text-shadow:2px 2px 0 #000;margin-top:20px">⭐ <span id="score">0</span> 分</div>
+    </div>
+    
+    <div id="endScreen" class="hidden">
+        <div id="endMascot" style="font-size:6rem">🎉</div>
+        <h1 style="font-size:3rem;color:#FF6B6B;text-shadow:2px 2px 0 #fff;margin-bottom:20px">太棒了！</h1>
+        <p style="font-size:2rem;color:#fff;text-shadow:2px 2px 0 #000">你获得了 <span id="finalScore" style="font-size:3rem;color:#FFD700">0</span> 颗星星！</p>
+        <button class="btn-start" onclick="startGame()">再玩一次 🔄</button>
+    </div>
+
+    <script>
+        let score = 0, correct = 0, qCount = 0;
+        const totalQuestions = 10;
+        const colors = ['btn-green', 'btn-orange', 'btn-blue', 'btn-yellow'];
+
+        function testTTS() {
+            speak('你好！我是翠鸟！');
+        }
+
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 0.8;
+                utterance.pitch = 1.1;
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert('抱歉，您的浏览器不支持语音');
+            }
+        }
+
+        function showScreen(id) {
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('endScreen').classList.add('hidden');
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function startGame() {
+            score = 0;
+            qCount = 0;
+            document.getElementById('score').innerText = '0';
+            speak('开始啦！准备好算数了吗？');
+            showScreen('gameScreen');
+            setTimeout(nextQuestion, 1500);
+        }
+
+        function generateQuestion() {
+            const isAddition = Math.random() > 0.4;
+            let a, b, operator;
+
+            if (isAddition) {
+                a = Math.floor(Math.random() * 10) + 1;
+                b = Math.floor(Math.random() * 10) + 1;
+                correct = a + b;
+                operator = '+';
+            } else {
+                a = Math.floor(Math.random() * 10) + 2;
+                b = Math.floor(Math.random() * (a - 1)) + 1;
+                correct = a - b;
+                operator = '-';
+            }
+
+            return { a, b, operator };
+        }
+
+        function nextQuestion() {
+            if (qCount >= totalQuestions) {
+                endGame();
+                return;
+            }
+
+            const { a, b, operator } = generateQuestion();
+            document.getElementById('question').innerText = a + ' ' + operator + ' = ?';
+            
+            const options = new Set([correct]);
+            while (options.size < 4) {
+                const wrong = correct + Math.floor(Math.random() * 5) - 2;
+                if (wrong >= 0 && wrong !== correct) {
+                    options.add(wrong);
+                }
+            }
+            
+            const optionsArray = Array.from(options).sort(() => Math.random() - 0.5);
+            const optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = '';
+
+            optionsArray.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn ' + colors[i];
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(opt);
+                optionsDiv.appendChild(btn);
+            });
+
+            const opText = operator === '+' ? '加' : '减';
+            speak(a + ' ' + opText + ' ' + b + ' 等于多少？');
+            
+            qCount++;
+        }
+
+        function checkAnswer(answer) {
+            const feedback = document.createElement('div');
+            feedback.className = 'feedback';
+            feedback.innerText = answer === correct ? '🎉' : '😅';
+            document.body.appendChild(feedback);
+            
+            if (answer === correct) {
+                score++;
+                document.getElementById('score').innerText = score;
+                speak('答对啦！真棒！');
+            } else {
+                speak('再试一次哦！');
+            }
+            
+            setTimeout(() => feedback.remove(), 800);
+            setTimeout(nextQuestion, 1500);
+        }
+
+        function endGame() {
+            const mascots = ['🦜', '🌟', '🎉', '🏆'];
+            document.getElementById('endMascot').innerText = mascots[Math.floor(Math.random() * mascots.length)];
+            document.getElementById('finalScore').innerText = score;
+            
+            if (score >= 8) {
+                speak('太厉害啦！你是数学小天才！');
+            } else if (score >= 5) {
+                speak('做得很好！继续加油！');
+            } else {
+                speak('没关系，我们再玩一次吧！');
+            }
+            
+            showScreen('endScreen');
+        }
+        
+        // 页面加载后提示
+        window.onload = function() {
+            console.log('小小数学家已加载');
+        };
+    </script>
+</body>
+</html>
